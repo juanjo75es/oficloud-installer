@@ -1,37 +1,42 @@
 <?php 
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
 include_once("./db.php");
 include_once("./inc-log.php");
 
-$con = mysql_connect($g_db_server, $g_db_user, $g_db_password) or die("Error connecting to database");
-
-mysql_select_db($g_db_name, $con) or die("Error selecting database");
+$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Error connecting to database");
 
 
+$duser_id=$con->real_escape_string($_REQUEST["duser"]);
 
-$duser_id=mysql_real_escape_string($_REQUEST["duser"]);
+$droot_id=$con->real_escape_string($_REQUEST["droot"]);
 
-$droot_id=mysql_real_escape_string($_REQUEST["droot"]);
+$dusers_id=$con->real_escape_string($_REQUEST["dusers"]);
 
-$dusers_id=mysql_real_escape_string($_REQUEST["dusers"]);
+$dpublic_id=$con->real_escape_string($_REQUEST["dpublic"]);
 
-$dpublic_id=mysql_real_escape_string($_REQUEST["dpublic"]);
+$dsocial_id=$con->real_escape_string($_REQUEST["dsocial"]);
+$dinternet_id=$con->real_escape_string($_REQUEST["dinternet"]);
+$dmessages_id=$con->real_escape_string($_REQUEST["dmessages"]);
 
-$email=mysql_real_escape_string($_REQUEST["user"]);
 
-$userid=mysql_real_escape_string($_REQUEST["userid"]);
+$email=$con->real_escape_string($_REQUEST["user"]);
 
-$accountid=mysql_real_escape_string($_REQUEST["accountid"]);
+$userid=$con->real_escape_string($_REQUEST["userid"]);
 
-$password=mysql_real_escape_string($_REQUEST["password"]);
+$accountid=$con->real_escape_string($_REQUEST["accountid"]);
 
-$privkey=mysql_real_escape_string($_REQUEST["privkey"]);
+$password=$con->real_escape_string($_REQUEST["password"]);
+
+$privkey=$con->real_escape_string($_REQUEST["privkey"]);
 
 $pubkey=$_REQUEST["pubkey"];
 
-$privkey_signing=mysql_real_escape_string($_REQUEST["privkey_signing"]);
+$privkey_signing=$con->real_escape_string($_REQUEST["privkey_signing"]);
 
 $pubkey_signing=$_REQUEST["pubkey_signing"];
 
@@ -53,9 +58,9 @@ $pubkey_signing=str_replace( '\n', "\n", $pubkey_signing);
 
 $sql="SELECT * FROM cuentas WHERE email='$email'";
 
-$res=mysql_query($sql);
+$res=$con->query($sql);
 
-if($row=mysql_fetch_assoc($res))
+if($row=$res->fetch_assoc())
 
 {
 
@@ -75,9 +80,9 @@ else
 
 	$sql="SELECT * FROM usuarios WHERE email='$email'";
 
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 
-	if($row=mysql_fetch_assoc($res))
+	if($row=$res->fetch_assoc())
 
 	{
 
@@ -97,29 +102,28 @@ else
 
 		$sql="INSERT INTO usuarios(id,nick,password_hash,pubkey,encrypted_privkey,pubkey_signing,encrypted_privkey_signing,account,email,estado) VALUES($userid,'$email',SHA('$password'),'$pubkey','$privkey','$pubkey_signing','$privkey_signing',-1,'$email',0)";
 
-		$res=mysql_query($sql);		
+		$res=$con->query($sql);		
 
 		
 
 		$sql="INSERT INTO cuentas(id,owner_user_id,email) VALUES($accountid,$userid,'$email')";
 
-		$res=mysql_query($sql);		
+		$res=$con->query($sql);		
 
 		
 
 
 
 		$sql="INSERT INTO directorios(id,nombre,parent,fecha,account) VALUES($droot_id,'root',-1,now(),$accountid)";
-
-		mysql_query($sql);
-
-		$root_directory=mysql_insert_id();
+		$con->query($sql);
+		$root_directory=$con->insert_id;
 
 
 
 		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES($userid,$root_directory,1,1,1,1,1)";
-
-		mysql_query($sql);
+		$con->query($sql);
+		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES(-1,$root_directory,1,0,0,1,0)";
+		$con->query($sql);
 
 				
 
@@ -127,19 +131,19 @@ else
 
 		$sql="INSERT INTO directorios(id,nombre,parent,fecha,account) VALUES($dusers_id,'users',$root_directory,now(),$accountid)";
 
-		mysql_query($sql);
+		$con->query($sql);
 
-		$users_directory=mysql_insert_id();
+		$users_directory=$con->insert_id;
 
 		
 
 		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES($userid,$users_directory,1,-1,-1,-1,1)";
 
-		mysql_query($sql);
+		$con->query($sql);
 
 		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES(-1,$users_directory,1,1,0,1,0)";
 
-		mysql_query($sql);
+		$con->query($sql);
 
 		
 
@@ -147,56 +151,65 @@ else
 
 		$sql="INSERT INTO directorios(id,nombre,parent,fecha,account) VALUES($dpublic_id,'public',$root_directory,now(),$accountid)";
 
-		mysql_query($sql);
+		$con->query($sql);
 
-		$public_directory=mysql_insert_id();
+		$public_directory=$con->insert_id;
 
 				
 
 		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES($userid,$public_directory,1,-1,-1,-1,1)";
 
-		mysql_query($sql);
+		$con->query($sql);
 
 		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES(-1,$public_directory,1,1,1,1,0)";
 
-		mysql_query($sql);
+		$con->query($sql);
 
 		
 
 		//directorio de usuario en users
-
 		$sql="INSERT INTO directorios(id,nombre,parent,fecha,account) VALUES($duser_id,'$email',$users_directory,now(),$accountid)";
-
-		mysql_query($sql);
-
-		$user_directory=mysql_insert_id();
-
-
+		$con->query($sql);
+		$user_directory=$con->insert_id;
 
 		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES($userid,$user_directory,1,1,1,1,1)";
-
-		mysql_query($sql);
-
+		$con->query($sql);
 		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES(-1,$user_directory,1,0,0,0,0)";
-
-		mysql_query($sql);
-
-		
-
-				
+		$con->query($sql);
 
 		$sql="UPDATE usuarios SET estado=1,account=$accountid WHERE id=$userid";
+		$con->query($sql);
 
-		mysql_query($sql);
+		//directorio _social
+		$sql="INSERT INTO directorios(id,nombre,parent,fecha,account) VALUES($dsocial_id,'_social',$user_directory,now(),$accountid)";
+		$con->query($sql);		
 
+		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES($userid,$dsocial_id,1,1,1,1,1)";
+		$con->query($sql);
+		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES(-1,$dsocial_id,1,1,0,0,0)";
+		$con->query($sql);
+		
+		//directorio _internet
+		$sql="INSERT INTO directorios(id,nombre,parent,fecha,account) VALUES($dinternet_id,'_internet',$dsocial_id,now(),$accountid)";
+		$con->query($sql);		
+
+		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES($userid,$dinternet_id,1,1,1,1,1)";
+		$con->query($sql);
+		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES(-2,$dinternet_id,1,1,0,0,0)";
+		$con->query($sql);
 			
+		//directorio _internet
+		$sql="INSERT INTO directorios(id,nombre,parent,fecha,account) VALUES($dmessages_id,'_internet',$dsocial_id,now(),$accountid)";
+		$con->query($sql);		
+
+		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES($userid,$dmessages_id,1,1,1,1,1)";
+		$con->query($sql);
+		$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES(-1,$dmessages_id,1,1,0,0,0)";
+		$con->query($sql);
 
 		echo "{";
-
 		echo "\"message\":\"OK\",";
-
 		echo "\"cert\":\"\"";
-
 		echo "}";
 
 	}

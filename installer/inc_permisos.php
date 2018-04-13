@@ -1,19 +1,21 @@
 <?php 
 function comprobar_permiso_heredado_dir($dir,$tipo_permiso,$userid,$becho=false)
 {
+	global $con;
+
 	if($dir=="-1")
 		return "0";
 	if($dir=="-200")
 		return "0";
 	
 	$sql="SELECT * FROM permisos WHERE id=$dir AND is_directory=1 AND user=$userid";
-	//echo "$sql<br>";
+	//echo "$sql<br>";die;
 	if($becho)
 		echo "$sql";
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 	$permiso_usuario="-1";
 	$permiso_global="-1";
-	if($row=mysql_fetch_assoc($res))
+	if($row=$res->fetch_assoc())
 	{
 		$permiso_usuario=$row[$tipo_permiso];
 	}
@@ -21,8 +23,8 @@ function comprobar_permiso_heredado_dir($dir,$tipo_permiso,$userid,$becho=false)
 	$sql="SELECT * FROM permisos WHERE id=$dir AND is_directory=1 AND user=-1";
 	if($becho)
 		echo "$sql";
-	$res=mysql_query($sql);
-	if($row=mysql_fetch_assoc($res))
+	$res=$con->query($sql);
+	if($row=$res->fetch_assoc())
 	{
 		$permiso_global=$row[$tipo_permiso];
 	}
@@ -36,8 +38,8 @@ function comprobar_permiso_heredado_dir($dir,$tipo_permiso,$userid,$becho=false)
 		return "0";
 						
 	$sql="SELECT parent FROM directorios WHERE id=$dir";
-	$res=mysql_query($sql);
-	$row=mysql_fetch_row($res);
+	$res=$con->query($sql);
+	$row=$res->fetch_row();
 	$parent=$row[0];
 	if($parent=="-1")
 	{
@@ -50,13 +52,15 @@ function comprobar_permiso_heredado_dir($dir,$tipo_permiso,$userid,$becho=false)
 
 function comprobar_permiso_heredado($pid,$tipo,$tipo_permiso,$userid)
 {
+	global $con;
+
 	if($tipo!="directory")
 		$sql="SELECT directory as directorio FROM keyshares WHERE fileid=$pid";
 	else
 		$sql="SELECT parent as directorio FROM directorios WHERE id=$pid";
 	//echo "$sql";
-	$res=mysql_query($sql);
-	$row=mysql_fetch_assoc($res);
+	$res=$con->query($sql);
+	$row=$res->fetch_assoc();
 	if(!$row)
 		return "0";	
 	$dir=$row["directorio"];
@@ -65,14 +69,16 @@ function comprobar_permiso_heredado($pid,$tipo,$tipo_permiso,$userid)
 
 function obtener_permiso($pid,$tipo,$tipo_permiso,$userid)
 {
+	global $con;
+
 	if($tipo=="directory")
 		$sql="SELECT * FROM permisos WHERE id=$pid AND is_directory=1 AND user=$userid";
 	else
 		$sql="SELECT * FROM permisos WHERE id=$pid AND is_directory=0 AND user=$userid";
 	//echo "$sql";
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 	$permiso_usuario="-1";
-	if($row=mysql_fetch_assoc($res))
+	if($row=$res->fetch_assoc())
 	{
 		$permiso_usuario=$row[$tipo_permiso];
 	}
@@ -82,9 +88,9 @@ function obtener_permiso($pid,$tipo,$tipo_permiso,$userid)
 	else
 		$sql="SELECT * FROM permisos WHERE id=$pid AND is_directory=0 AND user=-1";
 	//echo "$sql";
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 	$permiso_global="-1";
-	if($row=mysql_fetch_assoc($res))
+	if($row=$res->fetch_assoc())
 	{
 		$permiso_global=$row[$tipo_permiso];
 	}

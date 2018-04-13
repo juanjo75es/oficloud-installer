@@ -1,5 +1,8 @@
 <?php 
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 
 header("Cache-Control: post-check=0, pre-check=0", false);
@@ -15,15 +18,12 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);
 include_once("./db.php");
 include_once("./inc-log.php");
 
-$con = mysql_connect($g_db_server, $g_db_user, $g_db_password) or die("Error connecting to database");
-
-mysql_select_db($g_db_name, $con) or die("Error selecting database");
-
+$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Error connecting to database");
 
 
 set_include_path($_SERVER["DOCUMENT_ROOT"].'/phpseclib');
 
-include('Crypt/RSA.php');
+//include('Crypt/RSA.php');
 
 include('Crypt/AES.php');
 
@@ -31,25 +31,9 @@ include('Crypt/Random.php');
 
 
 
+$userid = $con->real_escape_string($_REQUEST['userid']);
 
-
-function mi_mysql_real_escape_string($s)
-
-{
-
-	if(isset($s))
-
-		return mysql_real_escape_string($s);
-
-		return $s;
-
-}
-
-
-
-$userid = mi_mysql_real_escape_string($_REQUEST['userid']);
-
-$certificadoA = mi_mysql_real_escape_string($_REQUEST['cert']);
+$certificadoA = $con->real_escape_string($_REQUEST['cert']);
 
 
 
@@ -57,7 +41,7 @@ $certificadoA = mi_mysql_real_escape_string($_REQUEST['cert']);
 
 
 
-$rsa = new Crypt_RSA();
+//$rsa = new Crypt_RSA();
 
 
 
@@ -73,9 +57,9 @@ $firma=$acertificadoA[1];
 
 $sql="SELECT pubkey_signing,account FROM usuarios WHERE id=$userid";
 
-$res=mysql_query($sql);
+$res=$con->query($sql);
 
-$row=mysql_fetch_assoc($res);
+$row=$res->fetch_assoc();
 
 $pubkey=$row["pubkey_signing"];
 
@@ -85,9 +69,9 @@ $account=$row["account"];
 
 $sql="SELECT privkey,privkey_signing,pubkey,pubkey_signing FROM config";
 
-$res=mysql_query($sql);
+$res=$con->query($sql);
 
-$row=mysql_fetch_assoc($res);
+$row=$res->fetch_assoc();
 
 $privkey=$row["privkey"];
 
@@ -99,56 +83,47 @@ $pubkey_signing=$row["pubkey_signing"];
 
 
 
-$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-
+/*$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
 $rsa->loadKey($pubkey);
-
 $rsa->setHash("sha256");
-
 if(!@$rsa->verify($certificado_encriptado, $firma))
-
 {
-
 	echo "{";
-
 	echo "\"e\":\"KSERROR signature verification \",";
-
 	echo "\"cert\":\"\"";
-
 	echo "}";
-
 	die;
+}*/
 
+if(!openssl_verify($certificado_encriptado,$firma,$pubkey,OPENSSL_ALGO_SHA256))
+{
+	echo "{";
+	echo "\"message\":\"KSERROR signature verification\",";
+	echo "\"cert\":\"\"";
+	echo "}";
+	die;
 }
 
 
 
+
 $acertA=explode("#@@##",$certificado_encriptado);
-
 $encriptado=$acertA[0];
-
 $clave_encriptada=$acertA[1];
-
 $iv=$acertA[2];
 
-$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
-
+/*$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
 $rsa->setHash("sha1");
-
 $rsa->loadKey($privkey); // private key
-
-$clave=$rsa->decrypt($clave_encriptada);
+$clave=$rsa->decrypt($clave_encriptada);*/
+openssl_private_decrypt($clave_encriptada,$clave,$privkey,OPENSSL_PKCS1_OAEP_PADDING);
 
 
 
 $cipher = new Crypt_AES(); // could use CRYPT_AES_MODE_CBC
-
 $cipher->setKeyLength(256);
-
 $cipher->setKey($clave);
-
 $cipher->setIV($iv);
-
 $certA=$cipher->decrypt($encriptado);
 
 sqllog($userid,$certA);
@@ -191,25 +166,17 @@ function arreglar_clave($k)
 
 
 
-$newpubkey=arreglar_clave($newpubkey);
-
+/*$newpubkey=arreglar_clave($newpubkey);
 $newprivkey=arreglar_clave($newprivkey);
-
 $newpubkey_signing=arreglar_clave($newpubkey_signing);
-
-$newprivkey_signing=arreglar_clave($newprivkey_signing);
-
-
-
+$newprivkey_signing=arreglar_clave($newprivkey_signing);*/
 
 
 
 
 $sql="UPDATE usuarios SET password_hash='$newpassword',pubkey='$newpubkey',encrypted_privkey='$newprivkey',pubkey_signing='$newpubkey_signing',encrypted_privkey_signing='$newprivkey_signing' WHERE id=$userid";
-
 //echo $sql;die;
-
-mysql_query($sql);
+$con->query($sql);
 
 
 
@@ -227,28 +194,20 @@ $encypted=base64_encode($rsa->encrypt($message));*/
 
 
 
-$rsa->loadKey(str_replace("\r","",str_replace("\n","",$privkey_signing))); // private key
-
 $cert=$certA;//"$fileid#$fileName#$dirid#$size#";
-
+/*$rsa->loadKey(str_replace("\r","",str_replace("\n","",$privkey_signing))); // private key
 $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-
 $rsa->setHash("sha256");
-
 //echo "cert: $cert<br>";
+$signature = $rsa->sign($cert);*/
 
-$signature = $rsa->sign($cert);
-
-
-
+openssl_sign($cert,$signature,$privkey_signing,OPENSSL_ALGO_SHA256);
+$signature = base64_encode($signature);
 
 
 echo "{";
-
 echo "\"e\":\"OK\",";
-
-echo "\"cert\":\"".base64_encode($signature)."\"";
-
+echo "\"cert\":\"".$signature."\"";
 echo "}";
 
 ?>

@@ -1,4 +1,26 @@
-﻿DROP TABLE IF EXISTS `config`;
+﻿-- phpMyAdmin SQL Dump
+-- version 4.0.10deb1
+-- http://www.phpmyadmin.net
+--
+-- Servidor: localhost
+-- Tiempo de generación: 16-03-2017 a las 15:55:23
+-- Versión del servidor: 10.0.27-MariaDB-1~trusty
+-- Versión de PHP: 5.5.9-1ubuntu4.21
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+--
+-- Base de datos: `cloud_keyserver-dev`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `config`
+--
+
+DROP TABLE IF EXISTS `config`;
 CREATE TABLE IF NOT EXISTS `config` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `privkey` text NOT NULL,
@@ -9,6 +31,12 @@ CREATE TABLE IF NOT EXISTS `config` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `cuentas`
+--
+
 DROP TABLE IF EXISTS `cuentas`;
 CREATE TABLE IF NOT EXISTS `cuentas` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -16,6 +44,12 @@ CREATE TABLE IF NOT EXISTS `cuentas` (
   `email` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `directorios`
+--
 
 DROP TABLE IF EXISTS `directorios`;
 CREATE TABLE IF NOT EXISTS `directorios` (
@@ -29,12 +63,24 @@ CREATE TABLE IF NOT EXISTS `directorios` (
   UNIQUE KEY `nombre` (`nombre`,`parent`,`account`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1876 ;
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `emails_importados`
+--
+
 DROP TABLE IF EXISTS `emails_importados`;
 CREATE TABLE IF NOT EXISTS `emails_importados` (
   `email` varchar(255) NOT NULL,
   `cuenta` int(11) NOT NULL,
   PRIMARY KEY (`email`,`cuenta`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `errors`
+--
 
 DROP TABLE IF EXISTS `errors`;
 CREATE TABLE IF NOT EXISTS `errors` (
@@ -43,6 +89,12 @@ CREATE TABLE IF NOT EXISTS `errors` (
   `fecha` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `keyshares`
+--
 
 DROP TABLE IF EXISTS `keyshares`;
 CREATE TABLE IF NOT EXISTS `keyshares` (
@@ -57,6 +109,12 @@ CREATE TABLE IF NOT EXISTS `keyshares` (
   PRIMARY KEY (`fileid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `permisos`
+--
+
 DROP TABLE IF EXISTS `permisos`;
 CREATE TABLE IF NOT EXISTS `permisos` (
   `id` int(11) NOT NULL,
@@ -68,6 +126,12 @@ CREATE TABLE IF NOT EXISTS `permisos` (
   `user` int(11) NOT NULL,
   PRIMARY KEY (`id`,`is_directory`,`user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuarios`
+--
 
 DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE IF NOT EXISTS `usuarios` (

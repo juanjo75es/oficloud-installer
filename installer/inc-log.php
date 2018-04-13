@@ -2,8 +2,10 @@
 
 function sqllog($user,$msg)
 {
+    global $con;
+    
     $sql="INSERT INTO `log`(user,msg) VALUES($user,'$msg')";
-    mysql_query($sql);
+    $con->query($sql);
 }
 
 ?>

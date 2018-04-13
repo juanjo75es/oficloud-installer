@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 
 header("Cache-Control: post-check=0, pre-check=0", false);
@@ -15,10 +18,7 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE);
 include_once("./db.php");
 include_once("./inc-log.php");
 
-$con = mysql_connect($g_db_server, $g_db_user, $g_db_password) or die("Error connecting to database");
-
-mysql_select_db($g_db_name, $con) or die("Error selecting database");
-
+$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Error connecting to database");
 
 
 include('inc_permisos.php');
@@ -27,35 +27,20 @@ include('inc_permisos.php');
 
 set_include_path($_SERVER["DOCUMENT_ROOT"].'/phpseclib');
 
-include('Crypt/RSA.php');
-
+//include('Crypt/RSA.php');
 include('Crypt/AES.php');
-
 include('Crypt/Random.php');
 
 
 
-function mi_mysql_real_escape_string($s)
 
-{
+$userid=$con->real_escape_string($_REQUEST['userid']);
 
-	if(isset($s))
-
-		return mysql_real_escape_string($s);
-
-		return $s;
-
-}
+$certificadoA = $con->real_escape_string($_REQUEST['cert']);
 
 
 
-$userid=mi_mysql_real_escape_string($_REQUEST['userid']);
-
-$certificadoA = mi_mysql_real_escape_string($_REQUEST['cert']);
-
-
-
-$rsa = new Crypt_RSA();
+//$rsa = new Crypt_RSA();
 
 
 
@@ -71,9 +56,9 @@ $firma=$acertificadoA[1];
 
 $sql="SELECT pubkey_signing,account FROM usuarios WHERE id=$userid";
 
-$res=mysql_query($sql);
+$res=$con->query($sql);
 
-$row=mysql_fetch_assoc($res);
+$row=$res->fetch_assoc();
 
 $pubkey=$row["pubkey_signing"];
 
@@ -83,9 +68,9 @@ $account=$row["account"];
 
 $sql="SELECT privkey,privkey_signing,pubkey,pubkey_signing FROM config";
 
-$res=mysql_query($sql);
+$res=$con->query($sql);
 
-$row=mysql_fetch_assoc($res);
+$row=$res->fetch_assoc();
 
 $privkey=$row["privkey"];
 
@@ -97,49 +82,41 @@ $pubkey_signing=$row["pubkey_signing"];
 
 
 
-$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-
+/*$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
 $rsa->loadKey($pubkey);
-
 $rsa->setHash("sha256");
-
 if(!@$rsa->verify($certificado_encriptado, $firma))
-
 {
-
 	echo "{";
-
 	echo "\"e\":\"KSERROR signature verification\",";
-
 	echo "\"cert\":\"\"";
-
 	echo "}";
-
 	die;
+}*/
 
+if(!openssl_verify($certificado_encriptado,$firma,$pubkey,OPENSSL_ALGO_SHA256))
+{
+	echo "{";
+	echo "\"message\":\"KSERROR signature verification\",";
+	echo "\"cert\":\"\"";
+	echo "}";
+	die;
 }
 
 
 
 
-
 $acertA=explode("#@@##",$certificado_encriptado);
-
 $encriptado=$acertA[0];
-
 $clave_encriptada=$acertA[1];
-
 $iv=$acertA[2];
 
-$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
-
+/*$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
 $rsa->setHash("sha1");
-
 $rsa->loadKey($privkey); // private key
+$clave=@$rsa->decrypt($clave_encriptada);*/
 
-$clave=@$rsa->decrypt($clave_encriptada);
-
-
+openssl_private_decrypt($clave_encriptada,$clave,$privkey,OPENSSL_PKCS1_OAEP_PADDING);
 
 $cipher = new Crypt_AES(); // could use CRYPT_AES_MODE_CBC
 
@@ -217,7 +194,7 @@ if(!$badmin)
 function mover_directorio($p_id,$p_dir)
 
 {
-
+	global $con;
 	global $userid;
 
 	$badmin=obtener_permiso($p_id,"directory","write",$userid);
@@ -230,7 +207,7 @@ function mover_directorio($p_id,$p_dir)
 
 	/*$sql="SELECT * FROM keyshares f, directorios d WHERE d.parent=$p_id OR (f.directory=$p_id AND f.estado>0)";
 
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 
 	$n=mysql_num_rows($res);
 
@@ -242,17 +219,17 @@ function mover_directorio($p_id,$p_dir)
 
 	$sql="SELECT * FROM directorios WHERE id=$p_id";
 
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 
-	if(!($row=mysql_fetch_assoc($res)))
+	if(!($row=$res->fetch_assoc()))
 
 		return("Directory doesn't exist");
 
 	$sql="SELECT * FROM directorios WHERE id=$p_dir";
 
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 
-	if(!($row=mysql_fetch_assoc($res)))
+	if(!($row=$res->fetch_assoc()))
 
 		return("Directory doesn't exist");
 
@@ -260,9 +237,9 @@ function mover_directorio($p_id,$p_dir)
 
 	$sql="SELECT parent FROM directorios WHERE id=$p_id";
 
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 
-	$row=mysql_fetch_row($res);
+	$row=$res->fetch_row();
 
 	$parent=$row[0];
 
@@ -278,7 +255,7 @@ function mover_directorio($p_id,$p_dir)
 
 	//echo "$sql<br>";
 
-	mysql_query($sql);
+	$con->query($sql);
 
 		
 
@@ -286,7 +263,7 @@ function mover_directorio($p_id,$p_dir)
 
 	//echo "$sql<br>";
 
-	mysql_query($sql);
+	$con->query($sql);
 
 	
 
@@ -294,7 +271,7 @@ function mover_directorio($p_id,$p_dir)
 
 	//echo "$sql<br>";
 
-	mysql_query($sql);
+	$con->query($sql);
 
 	
 
@@ -307,7 +284,7 @@ function mover_directorio($p_id,$p_dir)
 function mover_fichero($p_id,$p_dir)
 
 {
-
+	global $con;
 	global $userid;
 
 	$badmin=obtener_permiso($p_id,"nodirectory","write",$userid);
@@ -322,9 +299,9 @@ function mover_fichero($p_id,$p_dir)
 
 	//echo "$sql<br>";
 
-	$res=mysql_query($sql);
+	$res=$con->query($sql);
 
-	if($row=mysql_fetch_assoc($res))
+	if($row=$res->fetch_assoc())
 
 	{
 
@@ -338,7 +315,7 @@ function mover_fichero($p_id,$p_dir)
 
 	$sql="UPDATE directorios SET last_change=now() WHERE id=(SELECT directorio FROM ficheros WHERE id=$p_id)";
 
-	mysql_query($sql);
+	$con->query($sql);
 
 		
 
@@ -346,7 +323,7 @@ function mover_fichero($p_id,$p_dir)
 
 	//echo "$sql<br>";
 
-	mysql_query($sql);
+	$con->query($sql);
 
 	
 
@@ -354,7 +331,7 @@ function mover_fichero($p_id,$p_dir)
 
 	//echo "$sql<br>";
 
-	mysql_query($sql);
+	$con->query($sql);
 
 	
 
@@ -378,7 +355,7 @@ foreach ($ficheros as $fichero)
 
 {
 
-	
+	global $con;
 
 	$id=$fichero->id;
 
@@ -386,7 +363,7 @@ foreach ($ficheros as $fichero)
 
 	$nombre=utf8_encode($fichero->nombre);
 
-	$nombre=mysql_real_escape_string($nombre);
+	$nombre=$con->real_escape_string($nombre);
 
 	
 
@@ -404,9 +381,9 @@ foreach ($ficheros as $fichero)
 
 		//echo $sql;
 
-		$res=mysql_query($sql);
+		$res=$con->query($sql);
 
-		if(!$row=mysql_fetch_assoc($res))
+		if(!$row=$res->fetch_assoc())
 
 		{
 
@@ -506,30 +483,23 @@ $outp.="],";
 
 
 
-$rsa->loadKey(str_replace("\r","",str_replace("\n","",$privkey_signing))); // private key
-
 $cert=$certA;//"$fileid#$fileName#$dirid#$size#";
 
+/*$rsa->loadKey(str_replace("\r","",str_replace("\n","",$privkey_signing))); // private key
 $rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-
 $rsa->setHash("sha256");
+$signature = $rsa->sign($cert);*/
 
-$signature = $rsa->sign($cert);
-
-
-
+openssl_sign($cert,$signature,$privkey_signing,OPENSSL_ALGO_SHA256);
+$signature = base64_encode($signature);
 
 
 if($nerrores==0)
-
 	$outp.="\"e\":\"OK\",";
-
 else
-
 	$outp.="\"e\":\"errors\",";
 
-$outp.="\"cert\":\"".base64_encode($signature)."\"";
-
+$outp.="\"cert\":\"".$signature."\"";
 $outp.="}";
 
 echo($outp);

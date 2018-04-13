@@ -28,9 +28,6 @@
 	if (version_compare(PHP_VERSION, '5.5.0', '<')) {
 		echo '<span style="color:orange">Warning: Recommended PHP version 5.5.0 or higher</span><br> ';
 	}
-	else if (version_compare(PHP_VERSION, '6.9.9', '>')) {
-		echo '<span style="color:red">Error: PHP version 7.0.0 or higher are unsupported</span><br> ';
-	}
 	else 
 		echo '<span style="color:green">PHP version is ok</span><br> ';
 	/*ob_start();

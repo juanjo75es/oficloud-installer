@@ -59,23 +59,17 @@ $output=array();
 $res=null;
 
 $output=dump("emails_importados");
-if($output)
-    $semails=implode("\\n",$output);
+$semails=implode("\\n",$output);
 $output=dump("directorios");
-if($output)
-    $sdirectorios=implode("\\n",$output);
+$sdirectorios=implode("\\n",$output);
 $output=dump("keyshares");
-if($output)
-    $skeyshares=implode("\\n",$output);
+$skeyshares=implode("\\n",$output);
 $output=dump("permisos");
-if($output)
-    $spermisos=implode("\\n",$output);
+$spermisos=implode("\\n",$output);
 $output=dump("usuarios");
-if($output)
-    $susuarios=implode("\\n",$output);
+$susuarios=implode("\\n",$output);
 $output=dump("cuentas");
-if($output)
-    $scuentas=implode("\\n",$output);
+$scuentas=implode("\\n",$output);
 
 $dump="[\"".urlencode($sdirectorios)."\"";
 $dump.=",\"".urlencode($skeyshares)."\"";
