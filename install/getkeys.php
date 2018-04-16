@@ -57,7 +57,11 @@ if(isset($_REQUEST["privk1"]))
 	
 	$context  = stream_context_create($opts);
 	
-	print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
+	//print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
+
+	$kk=file_get_contents("http://www.google.com", false);
+
+	echo $kk;
 
 	@$respuesta= file_get_contents("$server/set_keysharing_server.php", false, $context);
 	if($respuesta===FALSE)
