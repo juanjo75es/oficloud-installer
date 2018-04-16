@@ -7,8 +7,6 @@ $error=0;
 $con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or $error=-1;
 if($con==null)
 	$error=-3;
-if($error==0)
-	mysql_select_db($g_db_name, $con) or $error=-2;
 
 if($error<0)
 {
