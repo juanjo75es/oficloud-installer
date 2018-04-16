@@ -6,26 +6,20 @@ header("Pragma: no-cache");
 header("Content-Type: application/json; charset=UTF-8");
 
 include_once("../db.php");
-$con = mysql_connect($g_db_server, $g_db_user, $g_db_password) or die("Error connecting to database");
-mysql_select_db($g_db_name, $con) or die("Error selecting database");
+$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Could not connect to database");
+
 
 set_include_path($_SERVER["DOCUMENT_ROOT"].'/phpseclib');
 include('Crypt/RSA.php');
 include('Crypt/Random.php');
 
-function mi_mysql_real_escape_string($s)
-{
-	if(isset($s))
-		return mysql_real_escape_string($s);
-		return $s;
-}
 
 
 $parametros = base64_decode($_REQUEST['p']);
 
 $sql="SELECT * FROM config";
-$res=mysql_query($sql);
-$row=mysql_fetch_assoc($res);
+$res=$con->query($sql);
+$row=$res->fetch_assoc();
 $privkey=$row["privkey"];
 $privkey_signing=$row["privkey_signing"];
 
