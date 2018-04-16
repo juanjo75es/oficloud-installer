@@ -2,7 +2,8 @@
 
 $host='//'.$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF']);
 
-$server="https://www.oficloud.com/client";
+include_once("config.php");
+
 /*Hacer campo para introducir la clave-token
 
 Hacer que envie al servidor la clave publica (comprobar token)
