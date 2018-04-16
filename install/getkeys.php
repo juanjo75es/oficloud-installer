@@ -60,7 +60,7 @@ if(isset($_REQUEST["privk1"]))
 	//print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
 
 	
-	@$respuesta= file_get_contents("$server/set_keysharing_server.php", false, $context);
+	$respuesta= file_get_contents("$server/set_keysharing_server.php", false, $context);
 	if($respuesta===FALSE)
 	{
 		$error="The Oficloud server ($server) is not responding. Please try later or check your Internet connection.";
