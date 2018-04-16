@@ -16,7 +16,7 @@ if(isset($_REQUEST["privk1"]))
 	$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Could not connect to database");
 		
 	$token=$con->real_escape_string($_REQUEST["token"]);
-	echo $con->real_escape_string($_REQUEST["token"]);echo "---;"
+	echo ($con->real_escape_string($_REQUEST["token"]));echo "---;";
 	echo "$token - ".$_REQUEST["token"];
 	$privk1=$con->real_escape_string($_REQUEST["privk1"]);
 	$privk2=$con->real_escape_string($_REQUEST["privk2"]);
