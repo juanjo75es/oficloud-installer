@@ -7,6 +7,8 @@ $host='//'.$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF']);
 
 include_once("../config.php");
 
+echo "server:$server<br>";
+
 /*Hacer campo para introducir la clave-token
 
 Hacer que envie al servidor la clave publica (comprobar token)
@@ -57,7 +59,7 @@ if(isset($_REQUEST["privk1"]))
 	
 	$context  = stream_context_create($opts);
 	
-	print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
+	//print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
 
 	
 	$respuesta= file_get_contents("$server/get_keysharing_data.php", false, $context);
