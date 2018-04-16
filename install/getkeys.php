@@ -15,13 +15,13 @@ if(isset($_REQUEST["privk1"]))
 	include_once("../db.php");
 	$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Could not connect to database");
 		
-	$token=mysqli_real_escape_string($_REQUEST["token"]);
+	$token=$con->real_escape_string($_REQUEST["token"]);
 	echo "$token - ".$_REQUEST["token"];
-	$privk1=mysqli_real_escape_string($_REQUEST["privk1"]);
-	$privk2=mysqli_real_escape_string($_REQUEST["privk2"]);
-	$pubk1=mysqli_real_escape_string($_REQUEST["pubk1"]);
-	$pubk2=mysqli_real_escape_string($_REQUEST["pubk2"]);
-	$host=mysqli_real_escape_string($_REQUEST["host"]);
+	$privk1=$con->real_escape_string($_REQUEST["privk1"]);
+	$privk2=$con->real_escape_string($_REQUEST["privk2"]);
+	$pubk1=$con->real_escape_string($_REQUEST["pubk1"]);
+	$pubk2=$con->real_escape_string($_REQUEST["pubk2"]);
+	$host=$con->real_escape_string($_REQUEST["host"]);
 	
 	$con->query("START TRANSACTION");
 	
