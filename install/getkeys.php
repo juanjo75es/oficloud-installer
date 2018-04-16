@@ -12,23 +12,22 @@ Que el servidor envie un xml con los datos para que los importe
 if(isset($_REQUEST["privk1"]))
 {
 	include_once("../db.php");
-	$con = mysql_connect($g_db_server, $g_db_user, $g_db_password) or die("Could not connect to database");
-	mysql_select_db($g_db_name, $con) or die("Could not select database");
+	$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Could not connect to database");
+		
+	$token=$con->real_escape_string($_REQUEST["token"]);
+	$privk1=$con->real_escape_string($_REQUEST["privk1"]);
+	$privk2=$con->real_escape_string($_REQUEST["privk2"]);
+	$pubk1=$con->real_escape_string($_REQUEST["pubk1"]);
+	$pubk2=$con->real_escape_string($_REQUEST["pubk2"]);
+	$host=$con->real_escape_string($_REQUEST["host"]);
 	
-	$token=mysql_real_escape_string($_REQUEST["token"]);
-	$privk1=mysql_real_escape_string($_REQUEST["privk1"]);
-	$privk2=mysql_real_escape_string($_REQUEST["privk2"]);
-	$pubk1=mysql_real_escape_string($_REQUEST["pubk1"]);
-	$pubk2=mysql_real_escape_string($_REQUEST["pubk2"]);
-	$host=mysql_real_escape_string($_REQUEST["host"]);
-	
-	mysql_query("START TRANSACTION");
+	$con->query("START TRANSACTION");
 	
 	$sql="TRUNCATE TABLE config";
-	mysql_query($sql);
+	$con->query($sql);
 	$sql="INSERT INTO config(privkey,pubkey,privkey_signing,pubkey_signing,tokenkey) VALUES('$privk1','$pubk1','$privk2','$pubk2','$token')";
 	//echo "$sql";
-	mysql_query($sql);
+	$con->query($sql);
 	
 	$postdata = http_build_query(
 			array(
@@ -84,7 +83,7 @@ if(isset($_REQUEST["privk1"]))
 			/* cerrar conexi�n */
 			$mysqli->close();
 			
-			mysql_query("COMMIT");
+			$con->query("COMMIT");
 			
 			header("Location:confirmed.php");
 			die;
