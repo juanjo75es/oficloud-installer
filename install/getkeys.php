@@ -32,7 +32,7 @@ if(isset($_REQUEST["privk1"]))
 	$sql="INSERT INTO config(privkey,pubkey,privkey_signing,pubkey_signing,tokenkey) VALUES(?,?,?,?,?)";
 	//echo "$sql";
 	$stmt =$con->prepare($sql);
-	$con->bind_param("sssss", $privk1,$pubk1,$privk2,$pubk2,$token);
+	$stmt->bind_param("sssss", $privk1,$pubk1,$privk2,$pubk2,$token);
 	$stmt->execute();
 	
 	$postdata = http_build_query(
