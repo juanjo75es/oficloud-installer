@@ -17,7 +17,7 @@ if(isset($_REQUEST["privk1"]))
 		
 	$token=$_REQUEST["token"];
 	//echo ($con->real_escape_string($_REQUEST["token"]));echo "---";
-	echo "$token - ".$_REQUEST["token"];
+	//echo "$token - ".$_REQUEST["token"];
 	$privk1=$_REQUEST["privk1"];
 	$privk2=$_REQUEST["privk2"];
 	$pubk1=$_REQUEST["pubk1"];
@@ -54,7 +54,7 @@ if(isset($_REQUEST["privk1"]))
 	
 	$context  = stream_context_create($opts);
 	
-	print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
+	//print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
 
 	@$respuesta= file_get_contents("$server/set_keysharing_server.php", false, $context);
 	if($respuesta===FALSE)
