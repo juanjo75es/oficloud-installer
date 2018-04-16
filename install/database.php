@@ -52,7 +52,7 @@ else
 				if (substr(trim($line), -1, 1) == ';')
 				{
 					// Perform the query
-					mysql_query($templine) or print('Error performing query \'<strong>' . $templine . '\': ' . mysql_error() . '<br /><br />');
+					$con->query($templine) or print('Error performing query \'<strong>' . $templine . '\': ' . $con->error() . '<br /><br />');
 					// Reset temp variable to empty
 					$templine = '';
 				}
