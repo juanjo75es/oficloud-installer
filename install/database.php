@@ -4,7 +4,7 @@ include_once("../db.php");
 
 $error=0;
 
-@$con = mysql_connect($g_db_server, $g_db_user, $g_db_password) or $error=-1;
+$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or $error=-1;
 if($con==null)
 	$error=-3;
 if($error==0)
