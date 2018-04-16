@@ -52,7 +52,7 @@ else
 				if (substr(trim($line), -1, 1) == ';')
 				{
 					// Perform the query
-					$con->query($templine) or print('Error performing query \'<strong>' . $templine . '\': ' . $con->error_get_last() . '<br /><br />');
+					$con->query($templine) or print('Error performing query \'<strong>' . $templine . '\': <br /><br />');
 					// Reset temp variable to empty
 					$templine = '';
 				}
