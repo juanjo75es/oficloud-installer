@@ -2,7 +2,7 @@
 
 $host='//'.$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF']);
 
-include_once("config.php");
+include_once("../config.php");
 
 /*Hacer campo para introducir la clave-token
 
