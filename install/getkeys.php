@@ -57,10 +57,10 @@ if(isset($_REQUEST["privk1"]))
 	
 	$context  = stream_context_create($opts);
 	
-	print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
+	//print_r($postdata);	echo "<br>"; echo "$server/set_keysharing_server.php";
 
 	
-	$respuesta= file_get_contents("$server/set_keysharing_server.php", false, $context);
+	$respuesta= file_get_contents("$server/get_keysharing_data.php", false, $context);
 	if($respuesta===FALSE)
 	{
 		$error="The Oficloud server ($server) is not responding. Please try later or check your Internet connection.";
@@ -96,10 +96,23 @@ if(isset($_REQUEST["privk1"]))
 			$mysqli->close();
 			
 			$con->query("COMMIT");
-			
-			header("Location:confirmed.php");
-			die;
+
+			$respuesta= file_get_contents("$server/set_keysharing_server.php", false, $context);
+			if($respuesta===FALSE)
+			{
+				$error="The Oficloud server ($server) is not responding(2). Please try later or check your Internet connection.";
+			}
+			else 
+			{
+				$p=json_decode($respuesta);
+				if($p->e=="OK")
+				{	
+					header("Location:confirmed.php");
+					die;
+				}
+			}
 		}
+
 		else 
 			$error=$p->e;
 	}
