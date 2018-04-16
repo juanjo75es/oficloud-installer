@@ -1,5 +1,5 @@
 <?php
 
-$server="//www.oficloud.com/client";
+$server="http//www.oficloud.com/client";
 
 ?>
