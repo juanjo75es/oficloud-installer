@@ -15,22 +15,25 @@ if(isset($_REQUEST["privk1"]))
 	include_once("../db.php");
 	$con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Could not connect to database");
 		
-	$token=$con->real_escape_string($_REQUEST["token"]);
-	echo ($con->real_escape_string($_REQUEST["token"]));echo "---;";
+	$token=$_REQUEST["token"];
+	//echo ($con->real_escape_string($_REQUEST["token"]));echo "---";
 	echo "$token - ".$_REQUEST["token"];
-	$privk1=$con->real_escape_string($_REQUEST["privk1"]);
-	$privk2=$con->real_escape_string($_REQUEST["privk2"]);
-	$pubk1=$con->real_escape_string($_REQUEST["pubk1"]);
-	$pubk2=$con->real_escape_string($_REQUEST["pubk2"]);
-	$host=$con->real_escape_string($_REQUEST["host"]);
+	$privk1=$_REQUEST["privk1"];
+	$privk2=$_REQUEST["privk2"];
+	$pubk1=$_REQUEST["pubk1"];
+	$pubk2=$_REQUEST["pubk2"];
+	$host=$_REQUEST["host"];
 	
 	$con->query("START TRANSACTION");
 	
 	$sql="TRUNCATE TABLE config";
 	$con->query($sql);
-	$sql="INSERT INTO config(privkey,pubkey,privkey_signing,pubkey_signing,tokenkey) VALUES('$privk1','$pubk1','$privk2','$pubk2','$token')";
+	//$sql="INSERT INTO config(privkey,pubkey,privkey_signing,pubkey_signing,tokenkey) VALUES('$privk1','$pubk1','$privk2','$pubk2','$token')";
+	$sql="INSERT INTO config(privkey,pubkey,privkey_signing,pubkey_signing,tokenkey) VALUES(?,?,?,?,?)";
 	//echo "$sql";
-	$con->query($sql);
+	$con->prepare($sql);
+	$con->bind_param("sssss", $privk1,$pubk1,$privk2,$pubk2,$token);
+	$con->execute();
 	
 	$postdata = http_build_query(
 			array(
