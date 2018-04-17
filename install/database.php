@@ -121,12 +121,12 @@ else
 	<?php 
 	if($error==0)
 	{
-		echo "<span class=\"green\">Access to $name database granted</span>";
+		echo "<span class=\"green\">Access to $g_db_name database granted</span>";
 	}
 	elseif ($error==-1)
-		echo "<span class=\"red\">Could not connect to $host!</span>";
+		echo "<span class=\"red\">Could not connect to $g_db_server!</span>";
 	elseif ($error==-2)
-		echo "<span class=\"red\">Could not connect to $name database!</span>";
+		echo "<span class=\"red\">Could not connect to $g_db_name database!</span>";
 	elseif ($error==-3)
 		echo "<span class=\"red\">Access denied for the specified user/password combination!</span>";
 		
