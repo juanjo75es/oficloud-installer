@@ -7,7 +7,7 @@ $host='//'.$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF']);
 
 include_once("../config.php");
 
-echo "server:$server<br>";
+//echo "server:$server<br>";
 
 /*Hacer campo para introducir la clave-token
 
@@ -15,6 +15,8 @@ Hacer que envie al servidor la clave publica (comprobar token)
 
 Que el servidor envie un xml con los datos para que los importe
 */
+$error="";
+
 if(isset($_REQUEST["privk1"]))
 {
 	include_once("../db.php");
