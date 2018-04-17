@@ -4,7 +4,7 @@
 
 $host='//'.$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF']);
 
-$server="//www.oficloud.com/client";
+include_once("../config.php");
 
 $error="";
 
