@@ -22,6 +22,7 @@ $con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("E
 
 
 
+
 set_include_path($_SERVER["DOCUMENT_ROOT"].'/phpseclib');
 
 //include('Crypt/RSA.php');
@@ -32,6 +33,7 @@ include('Crypt/Random.php');
 
 
 $userid=$con->real_escape_string($_REQUEST['userid']);
+$msgid=$con->real_escape_string($_REQUEST['msgid']);
 
 $certificadoA = $con->real_escape_string($_REQUEST['cert']);
 
@@ -43,92 +45,32 @@ $certificadoA = $con->real_escape_string($_REQUEST['cert']);
 
 $certificadoA=base64_decode($certificadoA);
 
-$acertificadoA=explode('@#@#@$$',$certificadoA);
-
-$certificado_encriptado=$acertificadoA[0];
-
-$firma=$acertificadoA[1];
-
 
 
 $sql="SELECT pubkey_signing,account FROM usuarios WHERE id=$userid";
-
 $res=$con->query($sql);
-
 $row=$res->fetch_assoc();
-
 $pubkey=$row["pubkey_signing"];
-
 $account=$row["account"];
 
 
-
 $sql="SELECT privkey,privkey_signing,pubkey,pubkey_signing FROM config";
-
 $res=$con->query($sql);
-
 $row=$res->fetch_assoc();
-
 $privkey=$row["privkey"];
-
 $privkey_signing=$row["privkey_signing"];
-
 $pubkey_signing=$row["pubkey_signing"];
 
 
+$o_res=extraer_certificado($certificadoA,$pubkey,$privkey,$certA);
 
-/*$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-$rsa->loadKey($pubkey);
-$rsa->setHash("sha256");
-if(!@$rsa->verify($certificado_encriptado, $firma))
+if(isset($o_res->e))
 {
-	echo "{";
-	echo "\"e\":\"KSERROR signature verification $certificadoA\",";
-	echo "\"cert\":\"\"";
-	echo "}";
-	die;
-}*/
-
-if(!openssl_verify($certificado_encriptado,$firma,$pubkey,OPENSSL_ALGO_SHA256))
-{
-	echo "{";
-	echo "\"message\":\"KSERROR signature verification\",";
-	echo "\"cert\":\"\"";
-	echo "}";
+	echo json_encode($o_res);
 	die;
 }
 
-
-
-
-$acertA=explode("#@@##",$certificado_encriptado);
-$encriptado=$acertA[0];
-$clave_encriptada=$acertA[1];
-$iv=$acertA[2];
-
-/*$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
-$rsa->setHash("sha1");
-$rsa->loadKey($privkey); // private key
-$clave=$rsa->decrypt($clave_encriptada);*/
-
-openssl_private_decrypt($clave_encriptada,$clave,$privkey,OPENSSL_PKCS1_OAEP_PADDING);
-
-
-$cipher = new Crypt_AES(); // could use CRYPT_AES_MODE_CBC
-
-$cipher->setKeyLength(256);
-
-$cipher->setKey($clave);
-
-$cipher->setIV($iv);
-
-$certA=$cipher->decrypt($encriptado);
-
-sqllog($userid,$certA);
-$certAutf8=utf8_encode($certA);
-$o_certA=json_decode($certAutf8);
-
-
+$o_certA=$o_res;
 
 //$account=$o_certA->account;
 
@@ -141,6 +83,9 @@ $img2=$o_certA->img2;
 $img3=$o_certA->img3;
 $img4=$o_certA->img4;
 $video=$o_certA->video;
+$secret=$o_certA->secret;
+$share=$o_certA->share;
+
 
 //print_r($o_certA);die;
 
@@ -150,6 +95,10 @@ $img2id=$img2;
 $img3id=$img3;
 $img4id=$img4;
 $videoid=$video;
+
+$sql="INSERT INTO other_keyshares(id,tipo,share,estado,cuenta) VALUES('$msgid','message','$share',1,$account)";
+//echo $sql;die;
+$con->query($sql);
 
 $a_recipients=explode(";",$recipients);
 foreach($a_recipients as $recipient)
@@ -167,6 +116,9 @@ foreach($a_recipients as $recipient)
 			{
 				$sql="INSERT INTO permisos(user,id,is_directory,`read`,`write`,exec,admin) VALUES($userid2,$f->id,0,1,0,0,0)";
 				//echo $sql;die;
+				$con->query($sql);
+
+				$sql="INSERT INTO secrets(aux_id,tipo,secret) VALUES($f->id,'file','$secret')";
 				$con->query($sql);
 			}
 			if($img1id!="")
@@ -208,6 +160,8 @@ foreach($a_recipients as $recipient)
 			//guardar en tabla de permisos complementaria y que se pase a permisos al hacer create_account o join_account???
 			$sql="INSERT INTO permisos_nuevos(user,id,is_directory,`read`,`write`,exec,admin) VALUES('$addr',$f->id,0,1,0,0,0)";
 			//echo $sql;die;
+			$con->query($sql);
+			$sql="INSERT INTO secrets(aux_id,tipo,secret) VALUES($f->id,'file','$secret')";			
 			$con->query($sql);
 		}
 		if($img1id!="")

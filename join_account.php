@@ -4,6 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 include_once("./db.php");
+include_once("./config.php");
 include_once("./inc-log.php");
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
@@ -24,6 +25,8 @@ $pubkey=$_REQUEST["pubkey"];
 $privkey_signing=$con->real_escape_string($_REQUEST["privkey_signing"]);
 $pubkey_signing=$_REQUEST["pubkey_signing"];
 
+$admin_token=$con->real_escape_string($_REQUEST["admin_token"]);
+$is_admin=($admin_token==$config_admin_token);
 	
 
 $pubkey=str_replace( '\r', "\r", $pubkey);
@@ -57,16 +60,19 @@ else
 	}
 	else 
 	{		
-		$sql="SELECT * FROM emails_importados WHERE email='$email' AND cuenta=$accountid";
-		$res=$con->query($sql);
-		if(!$row=$res->fetch_assoc())
+		if(!$is_admin)
 		{
-			echo "{";
-			echo "\"message\":\"Unauthorized\",";
-			echo "\"cert\":\"\"";
-			echo "}";
-			die;
-		}		
+			$sql="SELECT * FROM emails_importados WHERE email='$email' AND cuenta=$accountid";
+			$res=$con->query($sql);
+			if(!$row=$res->fetch_assoc())
+			{
+				echo "{";
+				echo "\"message\":\"Unauthorized\",";
+				echo "\"cert\":\"\"";
+				echo "}";
+				die;
+			}			
+		}
 
 		
 

@@ -19,7 +19,7 @@ $con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("E
 $con->query("START TRANSACTION");
 
 include('inc_permisos.php');
-
+include('inc_certificados.php');
 
 
 set_include_path($_SERVER["DOCUMENT_ROOT"].'/phpseclib');
@@ -71,66 +71,28 @@ $pubkey_signing=$row["pubkey_signing"];
 
 
 $certificadoA=base64_decode($certificadoA);
-$acertificadoA=explode('@#@#@',$certificadoA);
-$certificado_encriptado=$acertificadoA[0];
-$firma=$acertificadoA[1];
 
-/*$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-$rsa->loadKey($pubkey);
-$rsa->setHash("sha256");
 
-if(!@$rsa->verify($certificado_encriptado, $firma))
+$o_res=extraer_certificado($certificadoA,$pubkey,$privkey,$certA);
+
+if(isset($o_res->e))
 {
-	echo "{";
-	echo "\"message\":\"KSERROR signature verification \",";
-	echo "\"cert\":\"\"";
-	echo "}";
-	die;
-}*/
-
-if(!openssl_verify($certificado_encriptado,$firma,$pubkey,OPENSSL_ALGO_SHA256))
-{
-	echo "{";
-	echo "\"message\":\"KSERROR signature verification\",";
-	echo "\"cert\":\"\"";
-	echo "}";
+	echo json_encode($o_res);
 	die;
 }
 
-
-$acertA=explode("#@@##",$certificado_encriptado);
-$encriptado=$acertA[0];
-$clave_encriptada=$acertA[1];
-$iv=$acertA[2];
-
-/*$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
-$rsa->setHash("sha1");
-$rsa->loadKey($privkey); // private key
-$clave=@$rsa->decrypt($clave_encriptada);*/
-
-openssl_private_decrypt($clave_encriptada,$clave,$privkey,OPENSSL_PKCS1_OAEP_PADDING);
-
-
-$cipher = new Crypt_AES(); // could use CRYPT_AES_MODE_CBC
-$cipher->setKeyLength(256);
-$cipher->setKey($clave);
-$cipher->setIV($iv);
-$certA=@$cipher->decrypt($encriptado);
-sqllog($userid,$certA);
-$certAutf8=utf8_encode($certA);
-$o_certA=json_decode($certAutf8);
+$o_certA=$o_res;
 
 $share_certA=$o_certA->share;
 
 
 if($certificadoThumbnailA)
 {
-
 	$certificadoThumbnailA=base64_decode($certificadoThumbnailA);
 	$acertificadoThumbnailA=explode('@#@#@$$',$certificadoThumbnailA);
 	
 	$certificadoThumbnail_encriptado=$acertificadoThumbnailA[0];
-	$firma=$acertificadoThumbnailA[1];
+	$firma=base64_decode($acertificadoThumbnailA[1]);
 
 	/*$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
 	$rsa->loadKey($pubkey);
@@ -140,15 +102,17 @@ if($certificadoThumbnailA)
 	if(!openssl_verify($certificadoThumbnail_encriptado,$firma,$pubkey,OPENSSL_ALGO_SHA256))
 	{
 		echo "{";
-		echo "\"message\":\"KSERROR thumbnail signature verification $firma\",";
+		echo "\"message\":\"KSERROR thumbnail signature verification\",";
 		echo "\"cert\":\"\"";
 		echo "}";
 		die;
 	}
+
+	//$certificadoThumbnail_encriptado=base64_decode($certificadoThumbnail_encriptado);
 	
 	$acertA=explode("#@@##",$certificadoThumbnail_encriptado);
-	$encriptado=$acertA[0];
-	$clave_encriptada=$acertA[1];
+	$encriptado=base64_decode($acertA[0]);
+	$clave_encriptada=base64_decode($acertA[1]);
 	$iv=$acertA[2];
 	
 	/*$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
@@ -163,7 +127,7 @@ if($certificadoThumbnailA)
 	$cipher->setKey($clave);
 	$cipher->setIV($iv);
 	$certThumbnailA=@$cipher->decrypt($encriptado);
-	sqllog($userid,$certA);
+	
 	$certThumbnailAutf8=utf8_encode($certThumbnailA);
 	$o_certThumbnailA=json_decode($certThumbnailAutf8);
 	
@@ -180,6 +144,15 @@ if(sizeof($share)<1)
 {
 	echo "{";
 	echo "\"message\":\"KSERROR error in decrypt $certificadoA\",";
+	echo "\"cert\":\"\"";
+	echo "}";
+	die;
+}
+
+if(isset($certThumbnailA) && sizeof($certThumbnailA)>0 && sizeof($shareThumbnail)<1)
+{
+	echo "{";
+	echo "\"message\":\"KSERROR error in th decrypt $certThumbnailAutf8\",";
 	echo "\"cert\":\"\"";
 	echo "}";
 	die;

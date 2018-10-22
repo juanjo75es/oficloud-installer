@@ -7,6 +7,21 @@ function comprobar_permiso_heredado_dir($dir,$tipo_permiso,$userid,$becho=false)
 		return "0";
 	if($dir=="-200")
 		return "0";
+
+	{
+		$sql="SELECT * FROM permisos WHERE id=$dir AND is_directory=1 AND user=-2";
+		//echo "$sql";
+		$res=$con->query($sql);
+		if($row=$res->fetch_assoc())
+		{
+			$permiso_internet=$row[$tipo_permiso];
+		}
+			
+		if($permiso_internet=="1")
+			return "1";
+
+	}
+		
 	
 	$sql="SELECT * FROM permisos WHERE id=$dir AND is_directory=1 AND user=$userid";
 	//echo "$sql<br>";die;

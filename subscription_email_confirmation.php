@@ -28,9 +28,10 @@ include('Crypt/Random.php');
 
 $puserid=$con->real_escape_string($_REQUEST['userid']);
 $enc_shares=$_REQUEST["enc_shares"];
+$user_pubkey=$_REQUEST["user_pubkey"];
 $email=$con->real_escape_string($_REQUEST['email']);
 
-$sql="SELECT * FROM usuarios WHERE nick='$email'";
+/*$sql="SELECT * FROM usuarios WHERE nick='$email'";
 $res=$con->query($sql);
 $row=$res->fetch_assoc();
 $userid=$row["id"];
@@ -44,7 +45,7 @@ if($userid!=$puserid)
 $sql="SELECT pubkey FROM usuarios WHERE id=$userid";
 $res=$con->query($sql);
 $row=$res->fetch_assoc();
-$user_pubkey=$row["pubkey"];
+$user_pubkey=$row["pubkey"];*/
 
 
 $sql="SELECT privkey,privkey_signing,pubkey,pubkey_signing FROM config";
@@ -62,8 +63,18 @@ if($enc_shares)
     foreach($enc_shares as $enc)
     {
         openssl_private_decrypt(base64_decode($enc),$share,$privkey,OPENSSL_PKCS1_OAEP_PADDING);
+        if($share=="")
+        {
+            $outp="{";
+                $outp.="\"e\":\"Could not get share\"";
+                $outp.="}";
+                echo($outp);
+                die;
+                
+        }
         //echo $enc." - ".$share;die;
         openssl_public_encrypt($share,$enc2,$user_pubkey,OPENSSL_PKCS1_OAEP_PADDING);
+        //$a_shares[]=["share"=>$share,"upubkey"=>$user_pubkey,"enc"=>$enc,"new_enc"=>base64_encode($enc2)];
         $a_shares[]=["enc"=>$enc,"new_enc"=>base64_encode($enc2)];
         //$a_shares[]=["enc"=>$enc,"new_enc"=>base64_encode("hola mundo")];
     }
@@ -84,8 +95,7 @@ while($row=$res->fetch_assoc())
     $sql="INSERT INTO permisos(id,is_directory,`read`,`write`,`exec`,`admin`,user) VALUES($id,0,$read,$write,$exec,$admin,$userid)";
     $con->query($sql);
 }
-$sql="SELECT * FROM permisos_nuevos WHERE user='$email'";
-$con->query($sql);
+
 
 
 $outp="{";

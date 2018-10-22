@@ -10,7 +10,7 @@ header("Pragma: no-cache");
 
 
 header("Content-Type: application/json; charset=UTF-8");
-error_reporting(E_ERROR | E_WARNING | E_PARSE);
+error_reporting(E_ERROR | E_PARSE);
 
 
 include_once("./db.php");
@@ -19,7 +19,7 @@ include_once("./inc-log.php");
 $con = new mysqli($g_db_server, $g_db_user, $g_db_password,$g_db_name) or die("Error connecting to database");
 
 include('inc_permisos.php');
-
+include('inc_certificados.php');
 
 set_include_path($_SERVER["DOCUMENT_ROOT"].'/phpseclib');
 //include('Crypt/RSA.php');
@@ -35,9 +35,6 @@ $certificadoA = $con->real_escape_string($_REQUEST['cert']);
 //$rsa = new Crypt_RSA();
 
 $certificadoA=base64_decode($certificadoA);
-$acertificadoA=explode('@#@#@$$',$certificadoA);
-$certificado_encriptado=$acertificadoA[0];
-$firma=$acertificadoA[1];
 
 
 
@@ -62,63 +59,25 @@ $privkey=$row["privkey"];
 $privkey_signing=$row["privkey_signing"];
 
 
-/*$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-$rsa->loadKey($pubkey);
-$rsa->setHash("sha256");
-if(!@$rsa->verify($certificado_encriptado, $firma))
-{
-	echo "{";
-	echo "\"e\":\"KSERROR signature verification $certificadoA\",";
-	echo "\"cert\":\"\"";
-	echo "}";
-	die;
-}*/
+$o_res=extraer_certificado($certificadoA,$pubkey,$privkey,$certA);
 
-if(!openssl_verify($certificado_encriptado,$firma,$pubkey,OPENSSL_ALGO_SHA256))
+if(isset($o_res->e))
 {
-	echo "{";
-	echo "\"message\":\"KSERROR signature verification\",";
-	echo "\"cert\":\"\"";
-	echo "}";
+	echo json_encode($o_res);
 	die;
 }
+
+$o_certA=$o_res;
 
 $cert_no_encriptado=false;
-
-//if(!isset($_REQUEST["user_pubkey"]) || $_REQUEST["user_pubkey"]=="")
-{
-	$acertA=explode("#@@##",$certificado_encriptado);
-	$encriptado=$acertA[0];
-	$clave_encriptada=$acertA[1];
-	$iv=$acertA[2];	
-	/*$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
-	$rsa->setHash("sha1");
-	$rsa->loadKey($privkey); // private key
-	$clave=@$rsa->decrypt($clave_encriptada);*/
-
-	openssl_private_decrypt($clave_encriptada,$clave,$privkey,OPENSSL_PKCS1_OAEP_PADDING);
-
-	$cipher = new Crypt_AES(); // could use CRYPT_AES_MODE_CBC
-	$cipher->setKeyLength(256);
-	$cipher->setKey($clave);
-	$cipher->setIV($iv);
-	$certA=@$cipher->decrypt($encriptado);
-
-	if($certA=="")
+if(!isset($certA) || $certA=="")
 	{		
 		$cert_no_encriptado=true;
+		$acertificadoA=explode('@#@#@$$',$certificadoA);
+		$certificado_encriptado=$acertificadoA[0];
 		$certA=$certificado_encriptado;
+		$o_certA=json_decode($certA);
 	}
-}
-/*else{
-	$certA=$certificado_encriptado;	
-}*/
-
-
-sqllog($userid,$certA);
-$certAutf8=utf8_encode($certA);
-$o_certA=json_decode($certAutf8);
-
 
 $id=$o_certA->auxid;
 $tipo=$o_certA->type;
@@ -126,7 +85,7 @@ $tipo=$o_certA->type;
 if(!$id)
 {
 	echo "{";
-	echo "\"message\":\"KSERROR Unknown error \",";
+	echo "\"message\":\"KSERROR Unknown error $certA\",";
 	echo "\"cert\":\"\"";
 	echo "}";
 	die;

@@ -27,7 +27,7 @@ $con->begin_transaction();
 
 
 include('inc_permisos.php');
-
+include('inc_certificados.php');
 
 
 set_include_path($_SERVER["DOCUMENT_ROOT"].'/phpseclib');
@@ -44,9 +44,6 @@ $certificadoA = $con->real_escape_string($_REQUEST['cert']);
 //$rsa = new Crypt_RSA();
 
 $certificadoA=base64_decode($certificadoA);
-$acertificadoA=explode('@#@#@',$certificadoA);
-$certificado_encriptado=$acertificadoA[0];
-$firma=$acertificadoA[1];
 
 
 $sql="SELECT pubkey_signing,account FROM usuarios WHERE id=$userid";
@@ -63,53 +60,15 @@ $privkey=$row["privkey"];
 $privkey_signing=$row["privkey_signing"];
 $pubkey_signing=$row["pubkey_signing"];
 
+$o_res=extraer_certificado($certificadoA,$pubkey,$privkey,$certA);
 
-/*$rsa->setSignatureMode(CRYPT_RSA_SIGNATURE_PKCS1);
-$rsa->loadKey($pubkey);
-$rsa->setHash("sha256");
-if(!@$rsa->verify($certificado_encriptado, $firma))
+if(isset($o_res->e))
 {
-	echo "{";
-	echo "\"message\":\"KSERROR signature verification $certificadoA\",";
-	echo "\"cert\":\"\"";
-	echo "}";
-	die;
-}*/
-
-if(!openssl_verify($certificado_encriptado,$firma,$pubkey,OPENSSL_ALGO_SHA256))
-{
-	echo "{";
-	echo "\"message\":\"KSERROR signature verification\",";
-	echo "\"cert\":\"\"";
-	echo "}";
+	echo json_encode($o_res);
 	die;
 }
 
-
-
-$acertA=explode("#@@##",$certificado_encriptado);
-$encriptado=$acertA[0];
-$clave_encriptada=$acertA[1];
-$iv=$acertA[2];
-/*$rsa->setEncryptionMode(CRYPT_RSA_ENCRYPTION_OAEP);
-$rsa->setHash("sha1");
-
-$rsa->loadKey($privkey); // private key
-$clave=@$rsa->decrypt($clave_encriptada);*/
-
-openssl_private_decrypt($clave_encriptada,$clave,$privkey,OPENSSL_PKCS1_OAEP_PADDING);
-
-
-
-$cipher = new Crypt_AES(); // could use CRYPT_AES_MODE_CBC
-$cipher->setKeyLength(256);
-$cipher->setKey($clave);
-$cipher->setIV($iv);
-$certA=@$cipher->decrypt($encriptado);
-
-sqllog($userid,$certA);
-$certAutf8=utf8_encode($certA);
-$o_certA=json_decode($certAutf8);
+$o_certA=$o_res;
 
 if(sizeof($certA)<1)
 {
