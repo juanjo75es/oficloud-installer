@@ -179,7 +179,7 @@ foreach ($ficheros as $fichero)
 	{
 		$directorio=$fichero->dir;
 		$nombre2=utf8_decode($nombre);
-		$nombre2=mysql_escape_string($nombre2);
+		$nombre2=$con->real_escape_string($nombre2);
 		$sql="SELECT * FROM keyshares WHERE name='$nombre2' AND directory=$directorio AND estado=1";
 		//echo $sql;
 		$res=$con->query($sql);

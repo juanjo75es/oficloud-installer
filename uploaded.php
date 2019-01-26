@@ -152,7 +152,7 @@ if(sizeof($share)<1)
 if(isset($certThumbnailA) && sizeof($certThumbnailA)>0 && sizeof($shareThumbnail)<1)
 {
 	echo "{";
-	echo "\"message\":\"KSERROR error in th decrypt $certThumbnailAutf8\",";
+	echo "\"message\":\"KSERROR error in th decrypt \",";
 	echo "\"cert\":\"\"";
 	echo "}";
 	die;
